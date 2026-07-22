@@ -137,6 +137,29 @@
         .badge-correct { background-color: var(--success-color); }
         .badge-wrong { background-color: var(--danger-color); }
 
+        /* 결과 페이지용 보기 스타일 */
+        .res-option-item {
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+        }
+
+        .res-option-item.correct-target {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+
+        .res-option-item.user-wrong {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            font-weight: bold;
+        }
+
         .explanation-box {
             margin-top: 15px;
             padding: 12px 15px;
@@ -144,13 +167,6 @@
             border-left: 4px solid var(--primary-color);
             font-size: 0.95rem;
         }
-
-        .user-answer {
-            font-weight: bold;
-            margin-top: 8px;
-        }
-        .user-answer.correct { color: var(--success-color); }
-        .user-answer.wrong { color: var(--danger-color); }
 
         .restart-btn {
             display: block;
@@ -643,9 +659,8 @@
         });
     }
 
-    // 채점 및 결과 출력
+    // 채점 및 결과 출력 (정답 페이지 내 보기 전체 출력 로직 반영)
     function submitQuiz() {
-        let score = 0;
         let correctCount = 0;
         const resultContainer = document.getElementById('result-details');
         resultContainer.innerHTML = '';
@@ -657,24 +672,42 @@
             const isCorrect = userAns === q.ans;
             if (isCorrect) correctCount++;
 
+            // 결과용 보기 리스트 생성
+            let resOptionsHtml = '';
+            q.options.forEach((opt, optIndex) => {
+                let statusClass = '';
+                let statusLabel = '';
+
+                if (optIndex === q.ans) {
+                    statusClass = 'correct-target';
+                    statusLabel = userAns === q.ans ? ' ⭕ (내 선택 - 정답)' : ' 👈 (정답)';
+                } else if (optIndex === userAns) {
+                    statusClass = 'user-wrong';
+                    statusLabel = ' ❌ (내 선택 - 오답)';
+                }
+
+                resOptionsHtml += `
+                    <div class="res-option-item ${statusClass}">
+                        ${optIndex + 1}) ${opt}${statusLabel}
+                    </div>
+                `;
+            });
+
             // 결과 문제 카드 생성
             const resCard = document.createElement('div');
             resCard.className = 'question-card';
 
             const badgeClass = isCorrect ? 'badge-correct' : 'badge-wrong';
             const badgeText = isCorrect ? '정답 ⭕' : '오답 ❌';
-            const userAnsText = userAns !== -1 ? `${userAns + 1}) ${q.options[userAns]}` : "선택하지 않음";
-            const correctAnsText = `${q.ans + 1}) ${q.options[q.ans]}`;
 
             resCard.innerHTML = `
                 <div>
                     <span class="badge ${badgeClass}">${badgeText}</span>
                 </div>
                 <div class="question-title">[문제 ${index + 1}] ${q.q}</div>
-                <div class="user-answer ${isCorrect ? 'correct' : 'wrong'}">
-                    내 제출 답안: ${userAnsText}
+                <div class="options-list" style="margin-bottom: 12px;">
+                    ${resOptionsHtml}
                 </div>
-                ${!isCorrect ? `<div class="user-answer correct" style="margin-top:4px;">정답: ${correctAnsText}</div>` : ''}
                 <div class="explanation-box">
                     <strong>💡 해설:</strong> ${q.exp}
                 </div>
