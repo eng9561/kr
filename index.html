@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한국농어촌공사 직무지식 시험</title>
+    <style>
+        :root {
+            --primary-color: #004d99;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .question-card {
+            background: #fff;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            transition: all 0.2s ease;
+        }
+
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1a252f;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            margin-bottom: 10px;
+        }
+
+        .option-item label {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .option-item label:hover {
+            background: #e9ecef;
+        }
+
+        .option-item input[type="checkbox"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #003366;
+        }
+
+        /* 결과 화면 스타일 */
+        #result-screen {
+            display: none;
+        }
+
+        .score-board {
+            text-align: center;
+            background: #e9f2ff;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-num {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .badge-correct { background-color: var(--success-color); }
+        .badge-wrong { background-color: var(--danger-color); }
+
+        .explanation-box {
+            margin-top: 15px;
+            padding: 12px 15px;
+            background-color: #f1f3f5;
+            border-left: 4px solid var(--primary-color);
+            font-size: 0.95rem;
+        }
+
+        .user-answer {
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        .user-answer.correct { color: var(--success-color); }
+        .user-answer.wrong { color: var(--danger-color); }
+
+        .restart-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #6c757d;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 30px;
+            text-align: center;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>한국농어촌공사 직무지식 평가</h1>
+
+    <!-- 문제 풀이 폼 -->
+    <form id="quiz-form">
+        <div id="questions-container"></div>
+        <button type="button" class="submit-btn" onclick="submitQuiz()">제출하기</button>
+    </form>
+
+    <!-- 채점 결과 화면 -->
+    <div id="result-screen">
+        <div class="score-board">
+            <h2>시험 결과 요약</h2>
+            <div class="score-num" id="score-text">0점</div>
+            <p id="score-details"></p>
+        </div>
+
+        <h3>문제별 정·오답 및 해설</h3>
+        <div id="result-details"></div>
+
+        <button class="restart-btn" onclick="location.reload()">다시 풀기</button>
+    </div>
+</div>
+
+<script>
+    // 58개 전체 문제 데이터
+    const quizData = [
+        {
+            id: 1,
+            q: "다음 중 한국농어촌공사의 본사 및 지방 조직 체계 구성으로 올바르지 않은 것은?",
+            options: ["본사: 5본부 29처", "지방: 3원 9지역본부 (93지사)", "별도 운영: 안전기술본부, 7사업단", "지방: 12개 지역본부 (100지사)"],
+            ans: 3,
+            exp: "공사의 지방 조직은 3원 9지역본부(93지사)로 구성되어 있습니다."
+        },
+        {
+            id: 2,
+            q: "한국농어촌공사에서 관리하는 전체 관리면적 규모로 옳은 것은?",
+            options: ["30만 5천 ha", "40만 5천 ha", "46만 5백 ha", "52만 5천 ha"],
+            ans: 2,
+            exp: "공사의 전체 관리면적은 46만 5백 ha입니다."
+        },
+        {
+            id: 3,
+            q: "한국농어촌공사에서 관리하는 농업생산기반시설 중 올바른 저수지 개소 수는?",
+            options: ["3,428개소", "5,008개소", "6,043개소", "14,623개소"],
+            ans: 0,
+            exp: "전체 관리 시설물 14,623개소 중 저수지는 3,428개소입니다."
+        },
+        {
+            id: 4,
+            q: "한국농어촌공사에서 관리하는 방조제 개소 수는?",
+            options: ["104개소", "144개소", "204개소", "344개소"],
+            ans: 1,
+            exp: "공사 관리 방조제 개소 수는 144개소입니다."
+        },
+        {
+            id: 5,
+            q: "한국농어촌공사에서 관리하는 양배수장 개소 수는?",
+            options: ["3,428개소", "4,008개소", "5,008개소", "6,043개소"],
+            ans: 2,
+            exp: "공사 관리 양배수장 개소 수는 5,008개소입니다."
+        },
+        {
+            id: 6,
+            q: "한국농어촌공사에서 관리하는 취입보 등의 개소 수는?",
+            options: ["3,428개소", "5,008개소", "6,043개소", "14,623개소"],
+            ans: 2,
+            exp: "공사 관리 취입보 등의 개소 수는 6,043개소입니다."
+        },
+        {
+            id: 7,
+            q: "청년농업인 등의 농지 확보를 지원하기 위해 농지 구입자금을 전액 지원하는 제도는?",
+            options: ["선임대후매매 제도", "농지연금제도", "맞춤형 농지지원사업", "농지매매사업"],
+            ans: 0,
+            exp: "청년농업인 등에게 농지 구입자금을 전액 지원하며 10~30년 선임대 후 매도하는 제도는 선임대후매매(선임대후매도) 제도입니다."
+        },
+        {
+            id: 8,
+            q: "다음 중 한국농어촌공사의 3대 핵심 가치에 해당하지 않는 것은?",
+            options: ["안전", "신뢰", "공감", "혁신"],
+            ans: 3,
+            exp: "공사의 3대 핵심 가치는 안전, 신뢰, 공감입니다."
+        },
+        {
+            id: 9,
+            q: "다음 중 ESG 경영을 구성하는 핵심 요인에 해당하지 않는 것은?",
+            options: ["Environmental (환경)", "Social (사회)", "Governance (지배구조)", "Perspective (관점)"],
+            ans: 3,
+            exp: "ESG는 Environmental(환경), Social(사회), Governance(지배구조)의 약자입니다."
+        },
+        {
+            id: 10,
+            q: "한국농어촌공사의 ESG 경영 추진 방향 중 환경(E) 부문 전략과제에 해당하지 않는 것은?",
+            options: ["저탄소 에너지 사업 확대", "기후리스크 대응 및 탄소중립 고도화", "생물다양성 보전 및 녹색 경영 실천", "윤리, 인권 중심의 경영 실현"],
+            ans: 3,
+            exp: "환경(E) 부문 전략과제는 저탄소 에너지 사업 확대, 기후리스크 대응 및 탄소중립 고도화, 생물다양성 보전 및 녹색 경영 실천입니다."
+        },
+        {
+            id: 11,
+            q: "2026년 공사의 인권경영 대외 확산 전략방향('이해관계자 인권존중 문화 확산')의 추진과제에 해당하지 않는 것은?",
+            options: ["협력사 인권역량 강화 및 행동규범 확립", "농어촌 디지털 취약계층 돌봄 지원", "외국인 근로자 인권·안전 보호 강화", "인권침해 예방·보호 규정 정비"],
+            ans: 3,
+            exp: "대외 확산 추진 과제는 협력사 인권역량 강화, 디지털 취약계층 돌봄 지원, 외국인 근로자 인권·안전 보호 강화 3가지입니다."
+        },
+        {
+            id: 12,
+            q: "공사의 연차휴가를 사용할 수 있는 최소 시간 단위는?",
+            options: ["10분 단위", "30분 단위", "1시간 단위", "반차(4시간) 단위"],
+            ans: 1,
+            exp: "공사의 연차휴가는 최소 30분 단위로 사용할 수 있습니다."
+        },
+        {
+            id: 13,
+            q: "공사의 징계 종류 중 '경징계'에 해당하는 것만 올바르게 짝지어진 것은?",
+            options: ["정직, 감봉", "감봉, 견책", "강등, 정직", "파면, 해임"],
+            ans: 1,
+            exp: "징계 종류(파면, 해임, 강등, 정직, 감봉, 견책) 중 경징계는 감봉과 견책입니다."
+        },
+        {
+            id: 14,
+            q: "7급 신규입사자의 경력인정(표준가산급) 상한 기준은?",
+            options: ["최대 1년", "최대 3년", "최대 5년", "최대 10년"],
+            ans: 2,
+            exp: "7급 신규입사자의 경력인정 상한은 최대 5년까지입니다."
+        },
+        {
+            id: 15,
+            q: "매년 위험성 평가 결과의 적정성을 재검토하는 '정기평가'의 실시 주기는?",
+            options: ["6개월에 1회 이상", "1년에 1회 이상", "2년에 1회 이상", "3년에 1회 이상"],
+            ans: 1,
+            exp: "정기평가는 매년 위험성 평가 결과의 적정성을 재검토하여 1년에 1회 이상 실시합니다."
+        },
+        {
+            id: 16,
+            q: "스스로 위험 요인을 진단하고 개선하는 안전관리 시스템을 구축하고, 사고 발생 시 예방 노력에 따른 책임을 부여하는 체계의 명칭은?",
+            options: ["자기규율 안전체계", "자기규율 관리체계", "자기규율 예방체계", "자기규율 확립체계"],
+            ans: 2,
+            exp: "제시된 설명은 '자기규율 예방체계'를 의미합니다."
+        },
+        {
+            id: 17,
+            q: "전통적 안전 보건활동 관점에서의 특징으로 옳지 않은 것은?",
+            options: ["동기: 처벌회피(수동적)", "책임: 경영자, CEO", "평가: 외부점검", "목표: 처벌회피"],
+            ans: 1,
+            exp: "전통적 안전 보건활동의 책임자는 '안전보건담당자'입니다. (경영자/CEO는 안전보건관리체계)"
+        },
+        {
+            id: 18,
+            q: "안전보건관리체계 관점에서의 동기 및 평가 방식으로 올바른 조합은?",
+            options: ["동기: 처벌회피 / 평가: 외부점검", "동기: 성과달성(적극적) / 평가: 자체점검", "동기: 수동적 준수 / 평가: 관할 관청 점검", "동기: 법적 의무 / 평가: 제3자 감사"],
+            ans: 1,
+            exp: "안전보건관리체계는 적극적 성과달성을 동기로 하며, 자체점검을 통해 평가합니다."
+        },
+        {
+            id: 19,
+            q: "'주민등록번호'의 수집 및 이용에 관한 원칙으로 옳은 것은?",
+            options: ["정보주체의 동의가 있으면 수집·이용이 가능하다.", "공사 내부 규정에 서명하면 수집할 수 있다.", "법률에 구체적인 근거가 있는 경우를 제외하고는 동의가 있더라도 원천 금지된다.", "개인정보보호책임자의 승인을 얻어 자유롭게 수집한다."],
+            ans: 2,
+            exp: "주민등록번호는 법률에 구체적인 근거가 없으면 동의가 있더라도 원천 금지됩니다."
+        },
+        {
+            id: 20,
+            q: "개인정보보호법상 한국농어촌공사 조직에서 '개인정보처리자'에 해당하는 주체는?",
+            options: ["개인정보보호위원회", "한국농어촌공사", "개인정보 취급 담당자 개인", "IT 시스템 유지보수 업체"],
+            ans: 1,
+            exp: "개인정보파일을 운용하기 위해 개인정보를 처리하는 공공기관인 한국농어촌공사가 '개인정보처리자'입니다."
+        },
+        {
+            id: 21,
+            q: "개인정보가 불필요하게 되었을 때 파기해야 하는 기준인 '지체 없이'의 정확한 기한은?",
+            options: ["3일 이내", "5일 이내", "7일 이내", "14일 이내"],
+            ans: 1,
+            exp: "개인정보보호 관련 규정에서 '지체 없이'란 불필요하게 된 이후 5일 이내를 의미합니다."
+        },
+        {
+            id: 22,
+            q: "유출된 아이디와 비밀번호 목록을 다른 웹사이트에 자동 대입하여 계정 탈취를 시도하는 사이버 공격은?",
+            options: ["피싱 (Phishing)", "랜섬웨어 (Ransomware)", "크리덴셜 스터핑 (Credential Stuffing)", "파밍 (Pharming)"],
+            ans: 2,
+            exp: "크리덴셜 스터핑에 대한 정의입니다."
+        },
+        {
+            id: 23,
+            q: "개인정보 유출 사고 발생 시 정보주체 유출통지의 기한 및 수량 기준은?",
+            options: ["24시간 이내 / 1,000건 이상 발생 시", "48시간 이내 / 100건 이상 발생 시", "72시간 이내 / 단 1건이라도 발생 시", "7일 이내 / 민감정보 유출 시에만"],
+            ans: 2,
+            exp: "정보주체 유출통지는 단 1건이라도 발생하면 72시간 이내에 통지하여야 합니다."
+        },
+        {
+            id: 24,
+            q: "개인정보보호위원회 및 한국인터넷진흥원(KISA)에 필수적으로 유출 신고를 해야 하는 대상이 아닌 것은?",
+            options: ["1천 명 이상의 개인정보가 유출된 경우", "민감정보 또는 고유식별정보가 유출된 경우", "불법적인 접근(해킹)으로 유출이 발생한 경우", "일반 비공개 문서 5건이 단순 담당자 실수로 내부 공유된 경우"],
+            ans: 3,
+            exp: "유출 신고 대상은 1천 명 이상 유출, 민감정보/고유식별정보 유출, 해킹 등 불법 접근으로 인한 유출 발생 시입니다."
+        },
+        {
+            id: 25,
+            q: "문서의 법적 성립시기 및 결재 완료 후의 관리에 대한 설명으로 옳은 것은?",
+            options: ["결재권자의 서명결재가 있을 때 성립하며, 결재 완료된 문서는 수정·삭제가 불가능하다.", "기안자가 작성을 마쳤을 때 성립하며, 자유롭게 수정할 수 있다.", "수신 부서에 문서가 도착했을 때 성립한다.", "결재권자의 구두 승인이 내렸을 때 성립한다."],
+            ans: 0,
+            exp: "문서는 결재권자의 서명결재 시 성립되며, 완료된 문서는 수정이나 삭제가 불가능합니다."
+        },
+        {
+            id: 26,
+            q: "공공기록물 관리에 관한 법률상 법정 보존기간 7종에 해당하지 않는 것은?",
+            options: ["영구", "30년", "20년", "1년"],
+            ans: 2,
+            exp: "법정 보존기간 7종은 영구, 준영구, 30년, 10년, 5년, 3년, 1년으로 구성되며, 20년은 포함되지 않습니다."
+        },
+        {
+            id: 27,
+            q: "기록물 폐기 절차의 5단계 순서 중 '3번째' 단계에 해당하는 것은?",
+            options: ["평가대상 선별", "처리과(부서별) 의견조회", "기록물관리 전문요원 심사", "기록물평가 심의회 심의"],
+            ans: 2,
+            exp: "순서는 1) 평가대상 선별 -> 2) 처리과 의견조회 -> 3) 기록물관리 전문요원 심사 -> 4) 심의회 심의 -> 5) 최종확정입니다."
+        },
+        {
+            id: 28,
+            q: "생산 또는 접수한 비전자문서(종이문서)의 관리 원칙으로 옳은 것은?",
+            options: ["스캔본을 시스템에 올린 경우 원본 종이문서는 파기한다.", "반드시 원본을 보존하여야 한다.", "개인정보가 포함된 문서는 스캔 후 원본을 지체 없이 폐기한다.", "보존기간이 3년 이하인 문서에 한해 원본 폐기를 허용한다."],
+            ans: 1,
+            exp: "비전자문서는 스캔본 시스템 등록 여부나 개인정보 포함 여부와 관계없이 반드시 원본을 보존해야 합니다."
+        },
+        {
+            id: 29,
+            q: "민원회신 작성 시 제목에 포함되지 않도록 유의해야 하는 정보로 가장 거리가 먼 것은?",
+            options: ["민원인의 이름", "민원인의 주소", "영업비밀", "공사의 민원 처리 담당 부서명"],
+            ans: 3,
+            exp: "민원회신 제목에는 이름, 주소 등 개인정보, 영업비밀 등 비공개 대상이 포함되지 않게 해야 합니다."
+        },
+        {
+            id: 30,
+            q: "비밀의 종류 중 '누설될 경우 국가안전보장에 해를 끼칠 우려가 있는 비밀'에 해당하는 것은?",
+            options: ["1급 비밀", "2급 비밀", "3급 비밀", "대외비"],
+            ans: 2,
+            exp: "제시된 문장은 3급 비밀에 대한 법적 정의입니다."
+        },
+        {
+            id: 31,
+            q: "비밀 수발송 시 2급 및 3급 비밀을 정보통신망 암호화 발송 외에 추가로 접수·발송할 수 있는 수단은?",
+            options: ["일반우편", "등기우편", "오토바이 퀵서비스", "일반 팩스(Fax)"],
+            ans: 1,
+            exp: "2급 및 3급 비밀은 암호화 정보통신망 발송 외에 등기우편에 의한 접수·발송이 가능합니다."
+        },
+        {
+            id: 32,
+            q: "보호지역 내 비인가자 출입 관리에 관한 설명 중 올바르지 않은 것은?",
+            options: ["보호지역은 비인가자의 출입을 통제하는 것을 원칙으로 한다.", "비인가자는 어떠한 예외도 없이 절대 출입할 수 없다.", "출입이 필요하다고 인정되는 경우 해당 책임자의 승인을 받아야 한다.", "책임자의 승인을 받은 경우 관계직원이 동행하여 출입할 수 있다."],
+            ans: 1,
+            exp: "비인가자의 출입 통제가 원칙이나, 출입이 필요한 경우 책임자 승인 후 관계직원 동행 하에 출입할 수 있습니다."
+        },
+        {
+            id: 33,
+            q: "산업안전보건법상 크레인 및 컨베이어 설치 후 실시하는 정기 안전검사 주기는?",
+            options: ["1년마다", "2년마다", "3년마다", "5년마다"],
+            ans: 1,
+            exp: "크레인 및 컨베이어는 설치 후 3년 이내 최초 안전검사를 받은 뒤 2년마다 정기 안전검사를 받아야 합니다."
+        },
+        {
+            id: 34,
+            q: "양배수장 펌프 가동 순서 중 '주펌프 가동' 바로 전 단계에 실시해야 하는 운전은?",
+            options: ["흡입수조 확인", "펌프확인", "물맞이 운전", "펌프상태 확인"],
+            ans: 2,
+            exp: "순서는 1) 흡입수조 확인 -> 2) 펌프확인 -> 3) 물맞이 운전 -> 4) 주펌프 가동 -> 5) 펌프상태 확인 -> 6) 흡입, 토출 상태 순입니다."
+        },
+        {
+            id: 35,
+            q: "다음 중 한국농어촌공사에서 직접 운영·관리하는 수자원 관리시스템이 아닌 것은?",
+            options: ["RIMS", "RAWRIS", "DIMAS", "NDMS"],
+            ans: 3,
+            exp: "NDMS는 공사가 운영하는 시스템이 아닙니다. (공사 운영: RIMS, RAWRIS, DIMAS, 스마트 물관리 App)"
+        },
+        {
+            id: 36,
+            q: "저수지 자동수위 계측기에서 활용하는 센서 종류로 원문에 제시된 것이 아닌 것은?",
+            options: ["초음파 방식", "압력식", "레이다", "광학식 센서"],
+            ans: 3,
+            exp: "저수지 자동수위 계측기 센서 종류는 초음파 방식, 압력식, 레이다가 명시되어 있습니다."
+        },
+        {
+            id: 37,
+            q: "RAWRIS-AM 시스템에서 조회할 수 있는 실시간 수위 데이터의 측정 간격은?",
+            options: ["1분 간격", "5분 간격", "10분 간격", "1시간 간격"],
+            ans: 2,
+            exp: "RAWRIS-AM에서는 실시간 수위 10분 간격 자료를 조회할 수 있습니다."
+        },
+        {
+            id: 38,
+            q: "태풍 이동에 대한 정보를 실시간으로 확인하기 위해 활용하는 수자원 관리시스템은?",
+            options: ["RIMS", "RAWRIS", "DIMAS", "KORUS"],
+            ans: 2,
+            exp: "태풍 이동에 대한 정보는 DIMAS에서 확인할 수 있습니다."
+        },
+        {
+            id: 39,
+            q: "모바일 단말기를 사용하여 간편하게 수자원시스템을 활용할 수 있도록 제공하는 매체는?",
+            options: ["KORUS 모바일 포털", "스마트 물관리 App", "NDMS 모바일 현장앱", "RIMS GIS 태블릿 시스템"],
+            ans: 1,
+            exp: "스마트 물관리 App을 통해 모바일 단말기로 간편하게 수자원시스템을 활용합니다."
+        },
+        {
+            id: 40,
+            q: "『농어촌정비법』상 저수지 중 '1종 구조물'에 해당하는 총 저수량 기준은?",
+            options: ["총 저수량 10만 m³ 이상", "총 저수량 30만 m³ 이상", "총 저수량 50만 m³ 이상", "총 저수량 1,000만 톤 이상"],
+            ans: 1,
+            exp: "농어촌정비법상 1종 구조물은 총 저수량 30만 m³ 이상입니다."
+        },
+        {
+            id: 41,
+            q: "『시설물안전법』상 댐·저수지 중 1종 시설물의 용수조절댐 기준 저수용량은?",
+            options: ["총 저수용량 10만 m³ 이상", "총 저수용량 1백만 톤 이상", "총 저수용량 5백만 톤 이상", "총 저수용량 1천만 톤 이상"],
+            ans: 3,
+            exp: "시설물안전법상 1종 시설물 용수조절댐은 총 저수용량 1천만 톤 이상입니다."
+        },
+        {
+            id: 42,
+            q: "시설물 안전등급 중 '주요부재에 결함이 발생하여 긴급한 보수·보강이 필요하며, 사용제한 여부를 결정하여야 하는 상태'의 등급은?",
+            options: ["B (양호)", "C (보통)", "D (미흡)", "E (불량)"],
+            ans: 2,
+            exp: "제시된 정의는 D(미흡) 등급입니다."
+        },
+        {
+            id: 43,
+            q: "저수지 개별시설 점검 시 가장 높은 중요도 비중(65%)을 차지하는 시설은?",
+            options: ["제방", "여수로", "취수시설", "통관"],
+            ans: 0,
+            exp: "개별시설 점검 중요도는 제방(65%), 여수로(25%), 취수시설(10%) 순입니다."
+        },
+        {
+            id: 44,
+            q: "가장 일반적인 형식으로 제작·구조가 간단하고 유지관리가 용이하며 주로 '유수차단용'으로 사용되는 수문은?",
+            options: ["레디얼게이트", "인양식 롤러 게이트", "플랩게이트", "전동 수문"],
+            ans: 1,
+            exp: "인양식 롤러 게이트는 유수차단용이며 제작·구조가 간단합니다. (레디얼게이트는 유량 조절 목적)"
+        },
+        {
+            id: 45,
+            q: "재난상황 발생 시 관련 법령에 따른 한국농어촌공사의 역할 및 지위로 옳은 조합은?",
+            options: ["재난관리 책임기관 - 긴급구조 지원기관", "재난관리 통제기관 - 긴급구조 주도기관", "재난선포 결정기관 - 긴급구조 지원기관", "재난안전 총괄기관 - 긴급구조 책임기관"],
+            ans: 0,
+            exp: "공사는 재난관리 책임기관이자 긴급구조 지원기관입니다."
+        },
+        {
+            id: 46,
+            q: "신속하고 효과적인 재난 대응을 위해 수방자재를 사전 비축하고, 재난대비훈련을 정례적으로 실시하며, 위기관리 매뉴얼을 작성·유지하는 등 준수 및 준비상태를 유지하는 재난관리 단계는?",
+            options: ["예방단계 (안전점검 및 개보수사업 등 위험요인 사전 제거)", "대비단계 (수방자재 비축, 재난대비훈련, 위기관리 매뉴얼 수립 등)", "대응단계 (재난안전상황실 운영, 주민대피 실시 등 피해 최소화)", "복구단계 (피해 상황 조사, 응급 복구 및 항구 복구 진행)"],
+            ans: 1,
+            exp: "수방자재 비축, 재난대비훈련, 위기관리 매뉴얼 수립 등 준비상태 유지를 통해 재난에 사전 대비하는 과정은 대비 단계입니다."
+        },
+        {
+            id: 47,
+            q: "공사의 계약관리 규정상 물품·용역 계약의 '지역 제한 경쟁 입찰' 기준 금액은?",
+            options: ["1억 원 미만", "2.3억 원 미만", "5억 원 미만", "10억 원 미만"],
+            ans: 1,
+            exp: "물품 및 용역 계약의 지역 제한 경쟁 입찰 기준은 2.3억 원 미만입니다."
+        },
+        {
+            id: 48,
+            q: "수의계약 진행 시 G2B 안내공고는 견적제출 마감일 전일부터 역산하여 얼마 전까지 실시해야 하는가? (단, 토요일 및 공휴일 제외)",
+            options: ["1일 전까지", "3일 전까지", "5일 전까지", "7일 전까지"],
+            ans: 1,
+            exp: "견적제출 마감일 전일부터 기산하여 3일 전까지(토, 공휴일 제외) 실시합니다."
+        },
+        {
+            id: 49,
+            q: "선금지급 후 하수급인에게 선금을 배분했는지 확인자료를 제출받아 확인해야 하는 기한은?",
+            options: ["3일 이내", "5일 이내", "10일 이내", "20일 이내"],
+            ans: 1,
+            exp: "하수급인 선금 배분 확인자료 제출 및 확인은 5일 이내입니다. (선금 배분 및 수령내역 비교·확인은 20일 이내)"
+        },
+        {
+            id: 50,
+            q: "회계기준 시행세칙 제109조(검사원의 임면) 규정에 대한 설명으로 올바르지 않은 것은?",
+            options: ["부서 내 부장은 검사원으로 임명된 것으로 본다.", "필요한 경우 3급 이하 직원도 검사원으로 추가 임명할 수 있다.", "수요부서의 검사원은 특수한 기술이나 경험이 필요한 물품이라 하더라도 절대 검사원으로 임명될 수 없다.", "공사 현장 납품 자재는 공사 사무소장을 검사원으로 임명 가능하다."],
+            ans: 2,
+            exp: "원칙적으로 수요부서 직원의 검사는 제한되나, 특수한 기술이나 경험이 필요한 물품의 검사는 수요부서 직원도 검사원으로 임명 가능합니다."
+        },
+        {
+            id: 51,
+            q: "공사통합시스템 약어인 'KORUS'의 올바른 영문 풀이는?",
+            options: ["KOrea Rural community and Agriculture Corporation Unified System", "KOrea Real estate and Agriculture Resources Unified System", "KOrea Regional Agriculture Corporation Universal System", "KOrea Rural Agriculture Risk Unified System"],
+            ans: 0,
+            exp: "KORUS의 올바른 명칭 풀이입니다."
+        },
+        {
+            id: 52,
+            q: "KORUS 시스템 계정 자동 생성 대상에서 제외되는 인원은?",
+            options: ["정규직 직원", "무기계약직 직원", "단기인턴", "수습 직원"],
+            ans: 2,
+            exp: "공사 인적자원에 등록되어 있는 직원이라면 계정이 자동 생성되나 단기인턴은 제외됩니다."
+        },
+        {
+            id: 53,
+            q: "1회 사용자 인증으로 다수의 애플리케이션 및 웹사이트에 대한 사용자 로그인을 허용하는 인증 솔루션은?",
+            options: ["OTP", "SSO", "DRM", "ERP"],
+            ans: 1,
+            exp: "SSO(Single Sign-On)에 대한 정의입니다."
+        },
+        {
+            id: 54,
+            q: "전사포털 이용자의 준수사항 중 게시판 이용 수칙에 관한 설명으로 올바르지 않은 것은?",
+            options: ["게시물 등록 시 내용과 맞는 게시판을 선택하여 사용자가 정보 취득 시 선별할 수 있도록 한다.", "게시판에 올린 게시물에 대해 게시자가 모든 책임을 지며 실명등재를 원칙으로 한다.", "동일한 정보를 여러 차례에 걸쳐 중복 게시하여 포털 활용 효율을 높이도록 권장한다.", "개인 ID 및 암호가 타인에게 누출되지 않도록 철저히 관리한다."],
+            ans: 2,
+            exp: "동일한 정보를 여러 차례 중복 게시하여 전사포털 활용 효율을 저하시키는 일이 없도록 하여야 합니다(중복 게시 금지)."
+        },
+        {
+            id: 55,
+            q: "전사포털 게시물 등록 시 하여서는 아니 되는 금지 행위(4호 각 목)에 해당하지 않는 것은?",
+            options: ["국가 정책사항과 공사 경영방침에 상반되는 내용을 게시하는 행위", "출처가 불분명하고 검증되지 않은 사실을 유포하는 행위", "직원 화합 저해, 개인 신상 비방, 불평, 불만 선동 등의 불건전물을 게시하는 행위", "공식 업무 절차에 따른 직무 관련 정보 및 업무 안내 사항 공유 행위"],
+            ans: 3,
+            exp: "공식 업무 공유 행위는 정상적인 업무 절차이며 금지 행위에 해당하지 않습니다."
+        },
+        {
+            id: 56,
+            q: "수리시설 유지관리사업과 수리시설 개보수사업의 재원 비교로 올바른 것은?",
+            options: ["유지관리: 국고 100% / 개보수: 공사 자체자금 100%", "유지관리: 국고 및 공사 자체자금 / 개보수: 국고 100%", "유지관리: 지자체 자금 / 개보수: 국고 및 공사 자체자금", "유지관리: 공사 자체자금 100% / 개보수: 지자체 국고 보조금"],
+            ans: 1,
+            exp: "유지관리는 국고 및 공사 자체자금, 개보수는 국고 100% 재원으로 운영됩니다."
+        },
+        {
+            id: 57,
+            q: "농업 용배수로의 계통 구조 순서로 올바른 것은?",
+            options: ["간선 -> 지선 -> 지거", "지거 -> 지선 -> 간선", "간선 -> 지거 -> 지선", "지선 -> 간선 -> 지거"],
+            ans: 0,
+            exp: "용배수로는 간선 -> 지선 -> 지거 순의 체계로 이루어져 있습니다."
+        },
+        {
+            id: 58,
+            q: "공사관리 구역과 지자체 구역을 지형 공간정보상에서 확인하기 위해 사용하는 시스템 및 화면은?",
+            options: ["RIMS의 시설 GIS", "RAWRIS의 기상정보", "DIMAS의 재난상황판", "KORUS의 인사정보"],
+            ans: 0,
+            exp: "공사관리 구역과 지자체 구역은 RIMS(농업기반시설관리시스템)의 시설 GIS에서 확인할 수 있습니다."
+        }
+    ];
+
+    // 페이지 로드 시 문제 렌더링
+    window.onload = function() {
+        const container = document.getElementById('questions-container');
+        
+        quizData.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-card-${index}`;
+
+            let optionsHtml = '';
+            q.options.forEach((opt, optIndex) => {
+                optionsHtml += `
+                    <li class="option-item">
+                        <label>
+                            <input type="checkbox" name="q_${index}" value="${optIndex}" onclick="limitSingleCheckbox(this, 'q_${index}')">
+                            ${optIndex + 1}) ${opt}
+                        </label>
+                    </li>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="question-title">[문제 ${index + 1}] ${q.q}</div>
+                <ul class="options-list">${optionsHtml}</ul>
+            `;
+            container.appendChild(card);
+        });
+    };
+
+    // 체크박스 중복 선택 방지 (단일 선택 구현)
+    function limitSingleCheckbox(checkbox, groupName) {
+        const checkboxes = document.getElementsByName(groupName);
+        checkboxes.forEach((cb) => {
+            if (cb !== checkbox) cb.checked = false;
+        });
+    }
+
+    // 채점 및 결과 출력
+    function submitQuiz() {
+        let score = 0;
+        let correctCount = 0;
+        const resultContainer = document.getElementById('result-details');
+        resultContainer.innerHTML = '';
+
+        quizData.forEach((q, index) => {
+            const selectedBoxes = document.querySelectorAll(`input[name="q_${index}"]:checked`);
+            let userAns = selectedBoxes.length > 0 ? parseInt(selectedBoxes[0].value) : -1;
+
+            const isCorrect = userAns === q.ans;
+            if (isCorrect) correctCount++;
+
+            // 결과 문제 카드 생성
+            const resCard = document.createElement('div');
+            resCard.className = 'question-card';
+
+            const badgeClass = isCorrect ? 'badge-correct' : 'badge-wrong';
+            const badgeText = isCorrect ? '정답 ⭕' : '오답 ❌';
+            const userAnsText = userAns !== -1 ? `${userAns + 1}) ${q.options[userAns]}` : "선택하지 않음";
+            const correctAnsText = `${q.ans + 1}) ${q.options[q.ans]}`;
+
+            resCard.innerHTML = `
+                <div>
+                    <span class="badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="question-title">[문제 ${index + 1}] ${q.q}</div>
+                <div class="user-answer ${isCorrect ? 'correct' : 'wrong'}">
+                    내 제출 답안: ${userAnsText}
+                </div>
+                ${!isCorrect ? `<div class="user-answer correct" style="margin-top:4px;">정답: ${correctAnsText}</div>` : ''}
+                <div class="explanation-box">
+                    <strong>💡 해설:</strong> ${q.exp}
+                </div>
+            `;
+            resultContainer.appendChild(resCard);
+        });
+
+        // 점수 계산 (100점 만점 기준)
+        const finalScore = Math.round((correctCount / quizData.length) * 100);
+
+        document.getElementById('score-text').innerText = `${finalScore}점`;
+        document.getElementById('score-details').innerText = `총 ${quizData.length}문제 중 ${correctCount}문제를 맞히셨습니다.`;
+
+        // 화면 전환
+        document.getElementById('quiz-form').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+
+        // 최상단으로 스크롤 이동
+        window.scrollTo(0, 0);
+    }
+</script>
+
+</body>
+</html>
